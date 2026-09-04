@@ -272,11 +272,11 @@ assets/
 Then reference them:
 
 ```md
-![Landing](assets/landing.png)
+<img width="898" height="411" alt="image" src="https://github.com/user-attachments/assets/e487100b-7a5f-4350-b4c2-d816881d431c" />
 
-![Dashboard](assets/dashboard.png)
 
-![Compare Papers](assets/compare_papers.png)
+<img width="950" height="414" alt="image" src="https://github.com/user-attachments/assets/4f2b0dcb-dc33-4e6e-bc9c-1b1d36531052" />
+
 ```
 
 ---
@@ -297,9 +297,9 @@ Then reference them:
 
 AI Engineer | Agentic AI • RAG • LangGraph • FastAPI • React
 
-GitHub: `https://github.com/YOUR_USERNAME`
+GitHub: `https://github.com/TrishnaJaiswar`
 
-LinkedIn: `https://linkedin.com/in/YOUR_PROFILE`
+LinkedIn: `linkedin.com/in/trishna-jaiswar-a6a230322`
 
 ---
 
