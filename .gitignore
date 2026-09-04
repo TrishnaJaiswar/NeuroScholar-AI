@@ -1,0 +1,17 @@
+# Python virtual environment
+NeuroScholar-AI/
+Lib/
+Scripts/
+Include/
+pyvenv.cfg
+venv/
+.venv/
+
+# Environment
+.env
+
+# FAISS
+faiss_index/
+
+# Node
+node_modules/
