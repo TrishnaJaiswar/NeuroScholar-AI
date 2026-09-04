@@ -271,13 +271,13 @@ assets/
 
 Then reference them:
 
-```md
+
 <img width="898" height="411" alt="image" src="https://github.com/user-attachments/assets/e487100b-7a5f-4350-b4c2-d816881d431c" />
 
 
 <img width="950" height="414" alt="image" src="https://github.com/user-attachments/assets/4f2b0dcb-dc33-4e6e-bc9c-1b1d36531052" />
 
-```
+
 
 ---
 
