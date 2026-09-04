@@ -1,224 +1,308 @@
 # 🧠 NeuroScholar AI
 
-> **An Agentic AI Research Intelligence Platform powered by Advanced RAG, LangChain, LLMs, and MERN.**
+### Agentic Multi-Document Research Intelligence Platform
 
-NeuroScholar AI is a production-oriented GenAI platform that enables users to upload and analyze multiple research papers, books, and technical documents. Instead of being a basic PDF chatbot, it leverages **Advanced RAG**, **Agentic AI**, and **LLMs** to provide accurate, citation-aware, and context-rich responses.
+NeuroScholar AI is a full-stack **Agentic AI** platform that enables researchers to interact with multiple scientific papers using **Hybrid RAG**, **LangGraph Multi-Agent workflows**, **FAISS vector search**, and **citation-grounded report generation**.
 
----
-
-## ✨ Features
-
-- 📄 Multi-document upload (PDF, DOCX, TXT, Markdown)
-- 💬 Chat with research papers
-- 🔍 Advanced RAG pipeline
-- 🤖 Multi-Agent AI workflow
-- 📚 Citation-aware question answering
-- 📊 Research paper comparison
-- 📝 Literature review generation
-- 📈 Research trend analysis
-- 🧠 Context-aware conversations
-- ⚡ Hybrid Search (Dense + Keyword)
-- 🎯 Metadata filtering
-- 📄 Report generation
-- 📥 Export results
+It supports research chat, literature reviews, paper comparison, trend analysis, persistent research sessions, and PDF export—all within a modern React dashboard.
 
 ---
 
-# 🏗️ Architecture
+## 🚀 Features
 
-```
-User
-   │
-   ▼
-React Frontend
-   │
-   ▼
-FastAPI Backend
-   │
-   ▼
-LangChain Orchestrator
-   │
-   ▼
-Agentic AI System
-   │
-   ├── Planner Agent
-   ├── Retrieval Agent
-   ├── Research Agent
-   ├── Analysis Agent
-   ├── Report Agent
-   ├── Critic Agent
-   └── Citation Agent
-   │
-   ▼
-Advanced RAG Pipeline
-   │
-   ▼
-Vector Database
-   │
-   ▼
-LLM
-   │
-   ▼
-Final Verified Response
+* 💬 **Research Chat** with Hybrid RAG
+* 📚 **Literature Review** generation
+* 📄 **Compare Papers** side-by-side
+* 📈 **Trend Analysis** across multiple papers
+* 🔍 **Hybrid Retrieval** (FAISS + BM25 + Multi-Query)
+* ✅ **Citation Verification** with grounded evidence
+* 📑 **Multi-PDF Knowledge Base**
+* 🤖 **LangGraph Multi-Agent Workflow**
+* 🗂️ **Persistent Chat History** using SQLite
+* 📤 **Export Academic Reports as PDF**
+
+---
+
+## 🏗️ Architecture
+
+```text
+                   React + Zustand Frontend
+        ┌─────────────────────────────────────────┐
+        │ Landing • Dashboard • Workspace • Chat │
+        └──────────────────┬──────────────────────┘
+                           │
+                     FastAPI Backend
+                           │
+        ┌──────────────────┴──────────────────┐
+        │                                     │
+  LangGraph Multi-Agent                 Session Storage
+        │                                     │
+  Planner Agent                        SQLite Database
+        │
+  Retrieval Agent
+        │
+ Hybrid RAG (FAISS + BM25)
+        │
+ Research Agent
+        │
+ Analysis Agent
+        │
+ Citation Agent
+        │
+ Report Agent
+        │
+  Academic PDF Generator
 ```
 
 ---
 
-# 🚀 Advanced RAG Pipeline
+## 🤖 Multi-Agent Workflow
 
-- Document Loading
-- OCR Support
-- Metadata Extraction
-- Semantic Chunking
-- Embedding Generation
-- Vector Database
-- Hybrid Search
-- Multi Query Retrieval
-- Parent Document Retrieval
-- Self Query Retrieval
-- Contextual Compression
-- Reranking
-- Citation Validation
-- Answer Generation
+| Agent     | Responsibility                                   |
+| --------- | ------------------------------------------------ |
+| Planner   | Detects workflow and creates execution plan      |
+| Retrieval | Hybrid retrieval using FAISS + BM25              |
+| Research  | Extracts research insights from retrieved chunks |
+| Analysis  | Compares papers & identifies trends              |
+| Citation  | Generates grounded source citations              |
+| Report    | Produces publication-style academic report       |
 
 ---
 
-# 🤖 Agentic AI Workflow
+## 🖥️ Dashboard Workflows
 
-### Planner Agent
-Plans and decomposes complex user tasks.
-
-### Retrieval Agent
-Finds relevant documents using Advanced RAG.
-
-### Research Agent
-Extracts important insights from retrieved context.
-
-### Analysis Agent
-Compares documents and identifies patterns.
-
-### Report Agent
-Generates structured reports and summaries.
-
-### Critic Agent
-Validates responses and reduces hallucinations.
-
-### Citation Agent
-Ensures answers include proper source references.
+| Workflow             | Description                             |
+| -------------------- | --------------------------------------- |
+| 💬 Research Chat     | Ask questions across uploaded papers    |
+| 📚 Literature Review | Generate structured literature reviews  |
+| 📄 Compare Papers    | Compare methodology, datasets & results |
+| 📈 Trend Analysis    | Discover emerging research trends       |
 
 ---
 
-# 🛠️ Tech Stack
+## 🧠 Tech Stack
 
-## Frontend
-- React.js
-- Tailwind CSS
-- Axios
-
-## Backend
-- FastAPI
-- Node.js
-- Express.js
-
-## Database
-- MongoDB
-
-## AI Framework
-- LangChain
-
-## LLM
-- OpenAI / Open Source LLMs
-
-## Embeddings
-- HuggingFace Embeddings
-
-## Vector Database
-- Chroma / Pinecone
-
-## Advanced Retrieval
-- Hybrid Search
-- MultiQuery Retriever
-- ParentDocument Retriever
-- SelfQuery Retriever
-- Contextual Compression Retriever
-- Reranker
-
-## AI Features
-- RAG
-- Agentic AI
-- Tool Calling
-- Prompt Engineering
-- Memory
-- Structured Output
-
-## Deployment
-- Docker
-- Redis
-- Nginx
-- AWS / Azure / GCP
+| Layer            | Technology                           |
+| ---------------- | ------------------------------------ |
+| Frontend         | React, Tailwind CSS                  |
+| State Management | Zustand                              |
+| Backend          | FastAPI                              |
+| AI Framework     | LangGraph                            |
+| LLM              | Groq                                 |
+| RAG              | LangChain                            |
+| Retrieval        | FAISS + BM25 + Multi-Query Retriever |
+| Embeddings       | HuggingFace (all-MiniLM-L6-v2)       |
+| Database         | SQLite                               |
+| PDF Export       | ReportLab                            |
 
 ---
 
-# 📂 Project Structure
+## 📂 Project Structure
 
-```
-NeuroScholar-AI/
-
-│── frontend/
-│── backend/
-│── agents/
-│── rag/
-│── retrievers/
-│── prompts/
-│── tools/
-│── memory/
-│── vectorstore/
-│── embeddings/
-│── loaders/
-│── services/
-│── database/
-│── evaluation/
-│── utils/
-│── docs/
-│── tests/
-│── docker/
-│── requirements.txt
-│── README.md
+```text
+NeuroScholar-AI
+│
+├── backend
+│   ├── agents
+│   │   ├── planner_agent.py
+│   │   ├── retrieval_agent.py
+│   │   ├── research_agent.py
+│   │   ├── analysis_agent.py
+│   │   ├── citation_agent.py
+│   │   └── report_agent.py
+│   │
+│   ├── graph
+│   │   ├── workflow.py
+│   │   └── state.py
+│   │
+│   ├── rag
+│   │   └── Hybrid_pipeline.py
+│   │
+│   ├── routes
+│   │   ├── upload.py
+│   │   └── documents.py
+│   │
+│   ├── utils
+│   │   └── pdf_generator.py
+│   │
+│   ├── main.py
+│   ├── schemas.py
+│   └── requirements.txt
+│
+├── frontend
+│   ├── src
+│   │   ├── components
+│   │   ├── layouts
+│   │   ├── pages
+│   │   ├── services
+│   │   └── store
+│   │
+│   └── package.json
+│
+└── README.md
 ```
 
 ---
 
-# 🎯 Real-World Use Cases
+## ✨ Core Capabilities
 
-- Academic Research
-- Literature Reviews
-- Research Paper Comparison
-- Enterprise Knowledge Management
-- Technical Documentation Search
-- Legal Document Analysis
-- Corporate Knowledge Base
-- AI Research Assistant
+### 1. Hybrid RAG
+
+* FAISS semantic retrieval
+* BM25 keyword retrieval
+* Ensemble retriever
+* Multi-query expansion
+* Cross-document reasoning
+
+### 2. Multi-PDF Intelligence
+
+* Upload multiple research papers
+* Select specific PDFs
+* Retrieve only selected documents
+* Source-aware citations
+
+### 3. Persistent Research Sessions
+
+* SQLite chat history
+* Restore previous conversations
+* Workflow-specific memory
+* Dashboard research history
+
+### 4. Academic Report Generation
+
+* Abstract
+* Introduction
+* Key Findings
+* Comparative Analysis
+* Limitations
+* Conclusion
+* References
+* PDF Export
 
 ---
 
-# 🚀 Future Enhancements
+## 📡 API Endpoints
 
-- Multi-modal RAG
-- Voice Interaction
-- Graph RAG
-- Knowledge Graph Integration
-- Model Routing
-- Fine-Tuning Support
-- Multi-language Support
-- Team Collaboration
-- Research Recommendation System
-
----
-
-# 📜 License
-
-This project is licensed under the MIT License.
+| Method | Endpoint         | Description           |
+| ------ | ---------------- | --------------------- |
+| GET    | `/`              | Health check          |
+| POST   | `/chat`          | Agentic research chat |
+| POST   | `/upload`        | Upload PDF            |
+| GET    | `/documents`     | List indexed PDFs     |
+| GET    | `/sessions`      | Research history      |
+| POST   | `/sessions`      | Create session        |
+| PUT    | `/sessions/{id}` | Update session        |
+| POST   | `/export`        | Export PDF report     |
 
 ---
 
-## ⭐ If you find this project useful, consider giving it a star!
+## ⚙️ Installation
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/NeuroScholar-AI.git
+
+cd NeuroScholar-AI
+```
+
+### 2. Backend Setup
+
+```bash
+cd backend
+
+python -m venv venv
+
+# Windows
+venv\\Scripts\\activate
+
+pip install -r requirements.txt
+
+uvicorn main:app --reload
+```
+
+Backend runs at:
+
+```text
+http://127.0.0.1:8000
+```
+
+### 3. Frontend Setup
+
+```bash
+cd frontend
+
+npm install
+
+npm run dev
+```
+
+Frontend runs at:
+
+```text
+http://localhost:5173
+```
+
+---
+
+## 🔑 Environment Variables
+
+Create `backend/.env`
+
+```env
+GROQ_API_KEY=your_groq_api_key
+```
+
+---
+
+## 📸 Screenshots
+
+> Add these images inside `/assets`
+
+```text
+assets/
+├── landing.png
+├── dashboard.png
+├── literature_review.png
+├── compare_papers.png
+├── trend_analysis.png
+└── architecture.png
+```
+
+Then reference them:
+
+```md
+![Landing](assets/landing.png)
+
+![Dashboard](assets/dashboard.png)
+
+![Compare Papers](assets/compare_papers.png)
+```
+
+---
+
+## 🎯 Resume Highlights
+
+* Built a **6-Agent LangGraph workflow** for scientific research automation.
+* Implemented **Hybrid RAG** using FAISS, BM25, and Multi-Query Retrieval.
+* Developed **multi-document reasoning** with citation-grounded responses.
+* Designed a **React + FastAPI** full-stack architecture with persistent SQLite sessions.
+* Generated publication-style research reports with automatic PDF export.
+
+---
+
+## 👩‍💻 Author
+
+**Trishna Jaiswar**
+
+AI Engineer | Agentic AI • RAG • LangGraph • FastAPI • React
+
+GitHub: `https://github.com/YOUR_USERNAME`
+
+LinkedIn: `https://linkedin.com/in/YOUR_PROFILE`
+
+---
+
+## 📜 License
+
+This project is licensed under the **MIT License**.
