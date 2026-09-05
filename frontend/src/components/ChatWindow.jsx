@@ -1,11 +1,13 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
 import api from "../services/api";
 import { useChatStore } from "../store/chatStore";
 
 export default function ChatWindow() {
   const [input, setInput] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
 
   const {
     addMessage,
@@ -18,35 +20,165 @@ export default function ChatWindow() {
   );
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isStreaming) return;
 
+    const question = input.trim();
+
+    setInput("");
+    setIsStreaming(true);
+
+    // Add user message
     addMessage({
       role: "user",
-      content: input,
+      content: question,
     });
 
-    const question = input;
-    setInput("");
+    // Temporary assistant message
+    addMessage({
+      role: "assistant",
+      content: "",
+      citations: [],
+    });
 
     try {
-      const res = await api.post("/chat", {
-        question,
-        task: activeTask,
-        documents: selectedDocuments,
-      });
+      const response = await fetch(
+        `${api.defaults.baseURL}/chat/stream`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "text/event-stream",
+          },
+          body: JSON.stringify({
+            question,
+            task: activeTask,
+            documents: selectedDocuments,
+          }),
+        }
+      );
 
-      addMessage({
-        role: "assistant",
-        content: res.data.answer,
-        citations: res.data.citations || [],
-      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      if (!response.body) {
+        throw new Error("Streaming response is unavailable.");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      let buffer = "";
+      let fullAnswer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+
+        if (done) break;
+
+        buffer += decoder.decode(value, {
+          stream: true,
+        });
+
+        const events = buffer.split("\n\n");
+
+        buffer = events.pop() || "";
+
+        for (const event of events) {
+          const lines = event.split("\n");
+
+          const dataLine = lines.find((line) =>
+            line.startsWith("data:")
+          );
+
+          if (!dataLine) continue;
+
+          const jsonString = dataLine
+            .replace(/^data:\s*/, "")
+            .trim();
+
+          if (!jsonString) continue;
+
+          let data;
+
+          try {
+            data = JSON.parse(jsonString);
+          } catch (parseError) {
+            console.error(
+              "SSE JSON parse error:",
+              parseError,
+              jsonString
+            );
+            continue;
+          }
+
+          // --------------------------------------------
+          // Normal token streaming
+          // --------------------------------------------
+
+          if (data.type === "token") {
+            fullAnswer += data.content || "";
+
+            useChatStore
+              .getState()
+              .updateLastAssistantMessage(fullAnswer);
+          }
+
+          // --------------------------------------------
+          // Final answer for structured workflows
+          // --------------------------------------------
+
+          if (data.type === "final") {
+            fullAnswer = data.content || "";
+
+            useChatStore
+              .getState()
+              .updateLastAssistantMessage(fullAnswer);
+          }
+
+          // --------------------------------------------
+          // Backend error
+          // --------------------------------------------
+
+          if (data.type === "error") {
+            throw new Error(
+              data.message || "Backend streaming error."
+            );
+          }
+
+          // --------------------------------------------
+          // Stream finished
+          // --------------------------------------------
+
+          if (data.type === "done") {
+            break;
+          }
+        }
+      }
+
+      // --------------------------------------------
+      // Only show fallback if backend truly returned
+      // nothing
+      // --------------------------------------------
+
+      if (!fullAnswer.trim()) {
+        useChatStore
+          .getState()
+          .updateLastAssistantMessage(
+            "No response was generated."
+          );
+      }
+
     } catch (error) {
-      addMessage({
-        role: "assistant",
-        content: "Unable to connect to NeuroScholar AI backend.",
-      });
+      console.error("Streaming error:", error);
 
-      console.error(error);
+      useChatStore
+        .getState()
+        .updateLastAssistantMessage(
+          `Error: ${error.message}`
+        );
+    } finally {
+      setIsStreaming(false);
     }
   };
 
@@ -54,10 +186,13 @@ export default function ChatWindow() {
     switch (activeTask) {
       case "literature_review":
         return "Literature Review";
+
       case "compare_papers":
         return "Compare Papers";
+
       case "trend_analysis":
         return "Trend Analysis";
+
       default:
         return "Research Chat";
     }
@@ -67,10 +202,13 @@ export default function ChatWindow() {
     switch (activeTask) {
       case "literature_review":
         return "Generate a literature review from selected PDFs...";
+
       case "compare_papers":
         return "Compare the selected research papers...";
+
       case "trend_analysis":
         return "Analyze trends across selected papers...";
+
       default:
         return "Ask anything about selected research papers...";
     }
@@ -78,6 +216,7 @@ export default function ChatWindow() {
 
   return (
     <main className="flex-1 bg-gray-50 flex flex-col">
+
       {/* Header */}
       <div className="px-6 pt-5 flex items-center justify-between">
         <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
@@ -93,6 +232,7 @@ export default function ChatWindow() {
 
       {/* Chat */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
         {messages.length === 0 && (
           <div className="text-center mt-20">
             <h2 className="text-3xl font-bold text-gray-800">
@@ -107,24 +247,38 @@ export default function ChatWindow() {
 
         {messages.map((msg, index) =>
           msg.role === "user" ? (
-            <div key={index} className="flex justify-end">
+            <div
+              key={index}
+              className="flex justify-end"
+            >
               <div className="bg-blue-600 text-white rounded-2xl px-4 py-3 max-w-xl">
                 {msg.content}
               </div>
             </div>
           ) : (
-            <div key={index} className="flex gap-3">
+            <div
+              key={index}
+              className="flex gap-3"
+            >
               <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">
                 AI
               </div>
 
               <div className="bg-white border border-gray-200 rounded-2xl p-5 max-w-3xl shadow-sm">
+
                 <article className="prose prose-gray max-w-none">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {msg.content}
-                  </ReactMarkdown>
+                  {msg.content ? (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {msg.content}
+                    </ReactMarkdown>
+                  ) : (
+                    <div className="text-gray-400 text-sm animate-pulse">
+                      Thinking...
+                    </div>
+                  )}
                 </article>
 
+                {/* Citations */}
                 {msg.citations?.length > 0 && (
                   <div className="mt-5 border-t pt-4">
                     <h4 className="font-semibold text-sm text-gray-700 mb-3">
@@ -155,6 +309,7 @@ export default function ChatWindow() {
                     </div>
                   </div>
                 )}
+
               </div>
             </div>
           )
@@ -164,22 +319,41 @@ export default function ChatWindow() {
       {/* Input */}
       <div className="border-t bg-white p-4">
         <div className="border rounded-xl px-4 py-3 flex gap-3">
+
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            className="flex-1 outline-none"
-            placeholder={getPlaceholder()}
+            onKeyDown={(e) => {
+              if (
+                e.key === "Enter" &&
+                !e.shiftKey
+              ) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            disabled={isStreaming}
+            className="flex-1 outline-none disabled:bg-gray-50"
+            placeholder={
+              isStreaming
+                ? "Generating response..."
+                : getPlaceholder()
+            }
           />
 
           <button
             onClick={handleSend}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-5 rounded-lg"
+            disabled={isStreaming || !input.trim()}
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-5 rounded-lg"
           >
-            Send
+            {isStreaming
+              ? "Generating..."
+              : "Send"}
           </button>
+
         </div>
       </div>
+
     </main>
   );
 }

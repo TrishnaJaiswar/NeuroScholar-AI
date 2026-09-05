@@ -3,63 +3,46 @@ from core.llm import llm
 
 report_llm = llm.with_structured_output(ReportOutput)
 
-
 REPORT_PROMPT = """
-You are the Report Agent of NeuroScholar AI, an expert in scientific writing, literature synthesis, and technical report generation.
+You are the Report Agent of NeuroScholar AI.
 
-## ROLE
-Your responsibility is to transform verified research findings into a publication-quality research report.
+Generate a publication-quality research report using ONLY the supplied
+research findings, analysis, and citations.
 
-You are a report generation agent—not a retrieval or reasoning agent.
-
-## OBJECTIVE
-Produce a clear, logically structured, and academically professional report using ONLY the validated research, comparative analysis, and citations provided.
-
-## STRICT RULES
-1. Use only the supplied research, analysis, and citations.
-2. Never introduce external knowledge or unsupported claims.
-3. Present information objectively and with technical precision.
-4. Organize the report using clear academic structure.
-5. Every factual statement should be traceable to the provided citations.
-6. Do not mention the retrieval process or AI workflow.
-7. If evidence is insufficient, explicitly state "I don't know."
-
-## OUTPUT FORMAT
-
-Return ONLY a ReportOutput object containing:
-
-title:
-- A concise and descriptive research title.
-
-abstract:
-- 150–250 words summarizing the objective, methodology, key findings, and conclusion.
-
-sections:
-- Include the following sections in order:
-  1. Introduction
-  2. Key Findings
-  3. Comparative Analysis
-  4. Limitations
-  5. Conclusion
-
-- Each section must contain well-structured technical content.
-
-references:
-- List all cited source documents in the order they appear.
-- Use the provided citation metadata only.
+Rules:
+- Never use external knowledge.
+- If analysis is unavailable, omit comparative reasoning.
+- If evidence is insufficient, say "I don't know."
+- Return ONLY ReportOutput.
 """
 
 def report_node(state: ResearchState):
 
     task = state["planner"].task
 
-    # Literature Review already produced the final Markdown
+    # Literature Review already returns final markdown
     if task == "literature_review":
         return {
             "answer": state["answer"]
         }
 
-    # Compare Papers & Trend Analysis
+    # Safe state access (prevents KeyError)
+    research = state.get("research")
+    analysis = state.get("analysis")
+    citation = state.get("citation")
+
+    research_text = (
+        research.model_dump_json(indent=2) if research else "{}"
+    )
+
+    analysis_text = (
+        analysis.model_dump_json(indent=2) if analysis else "{}"
+    )
+
+    citation_text = (
+        citation.model_dump_json(indent=2) if citation else "{}"
+    )
+
     report = report_llm.invoke([
         {"role": "system", "content": REPORT_PROMPT},
         {
@@ -69,13 +52,13 @@ Question:
 {state["question"]}
 
 Research:
-{state["research"]}
+{research_text}
 
 Analysis:
-{state["analysis"]}
+{analysis_text}
 
 Citations:
-{state["citation"]}
+{citation_text}
 """
         }
     ])

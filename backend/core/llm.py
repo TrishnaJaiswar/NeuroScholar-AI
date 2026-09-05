@@ -9,6 +9,7 @@ load_dotenv()
 # )
 
 llm = ChatGroq(
-    model="openai/gpt-oss-20b",
-    temperature=0
+    model="openai/gpt-oss-120b",
+    temperature=0,
+    streaming=True
 )

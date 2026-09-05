@@ -4,144 +4,149 @@ from core.llm import llm
 research_llm = llm.with_structured_output(ResearchOutput)
 
 # ---------------- QA ----------------
+
 QA_RESEARCH_PROMPT = """
 You are NeuroScholar AI's Research Agent.
 
-Return ONLY Markdown.
+Answer ONLY from the retrieved PDF context.
 
-For QA tasks use this structure:
+Return Markdown using:
 
 # Title
 
-> One-sentence definition
+> One-line definition
 
 ## Architecture
 
-Explain briefly.
-
-## How it works
-
-Use bullet points.
+## How it Works
 
 ## Key Features
 
-- Feature 1
-- Feature 2
-- Feature 3
-
 ## Difference (if relevant)
 
-Use a markdown table.
-
-Rules:
-- Do NOT write Abstract, Introduction, Conclusion.
-- Maximum 350 words.
-- Be concise and educational.
+Never use external knowledge.
+If the answer is not in the context, say "I don't know."
+Maximum 350 words.
 """
 
 # ---------------- Literature Review ----------------
+
 LITERATURE_REVIEW_PROMPT = """
 You are NeuroScholar AI's Literature Review Agent.
 
-Return ONLY Markdown.
+Your job is to SYNTHESIZE multiple uploaded research papers.
 
-This is NOT a research paper.
-Do NOT write Abstract, Introduction, Conclusion, References, or Citation numbers.
+Use ONLY the retrieved context.
 
-Use exactly this structure:
+Return Markdown with exactly this structure:
 
 # Literature Review
 
 ## Executive Summary
-Write 120–180 words.
 
 ## Common Research Themes
-Use bullet points.
 
 ## Methodologies
-Create a markdown table with columns:
+
+Create a markdown table:
+
 | Paper | Method | Dataset |
 
 ## Key Findings
-List 5–8 evidence-based findings.
 
 ## Research Gaps
-List the unresolved problems.
 
 ## Limitations
-List limitations of the existing studies.
 
 ## Future Directions
-Provide practical future research opportunities.
 
-STRICT RULES:
-- Use only retrieved context.
-- Never invent citations.
-- Never write "Citation 1" or "References".
-- Maximum 600 words.
+Rules:
+- Every finding must come from the retrieved papers.
+- Mention paper names naturally.
+- Do NOT invent information.
+- If evidence is missing, write "I don't know."
+- Maximum 700 words.
 """
 
-# ---------------- Other Workflows ----------------
+# ---------------- Structured Research ----------------
+
 RESEARCH_PROMPT = """
-You are the Research Agent of NeuroScholar AI, an expert in scientific literature analysis and evidence synthesis.
+You are NeuroScholar AI's Research Agent.
 
-## ROLE
-Your responsibility is to extract the most important knowledge from the retrieved context.
+Extract only evidence from the retrieved papers.
 
-## OBJECTIVE
-Analyze the provided context and produce a concise, technically accurate research synthesis.
-
-Return ONLY a ResearchOutput object containing:
+Return ONLY ResearchOutput with:
 - summary
 - insights
 """
+
+def build_context(state: ResearchState):
+
+    chunks = state["retrieval"].chunks
+
+    if not chunks:
+        return "NO DOCUMENTS RETRIEVED"
+
+    text = []
+
+    for chunk in chunks[:4]:
+        content = chunk.content[:2500]
+
+        text.append(
+            f"""
+Source: {chunk.source}
+Page: {chunk.page}
+
+{content}
+"""
+        )
+
+    return "\n\n---\n\n".join(text)
 
 def research_node(state: ResearchState):
 
     task = state["planner"].task
 
     context = f"""
-Question:
+User Question:
 {state["question"]}
 
-Retrieved Context:
-{state["retrieval"].chunks}
+Retrieved Papers:
+
+{build_context(state)}
 """
 
     # -------- QA --------
     if task == "qa":
+
         response = llm.invoke([
             {"role": "system", "content": QA_RESEARCH_PROMPT},
             {"role": "user", "content": context}
         ])
 
-        return {
-            "answer": response.content
-        }
+        return {"answer": response.content}
 
     # -------- Literature Review --------
     if task == "literature_review":
+
         response = llm.invoke([
             {"role": "system", "content": LITERATURE_REVIEW_PROMPT},
             {"role": "user", "content": context}
         ])
 
-        research = ResearchOutput(
-            summary=response.content,
-            insights=[]
-        )
-
         return {
-            "research": research,
+            "research": ResearchOutput(
+                summary=response.content,
+                insights=[]
+            ),
             "answer": response.content
         }
 
     # -------- Compare / Trend / Report --------
+
     research = research_llm.invoke([
         {"role": "system", "content": RESEARCH_PROMPT},
         {"role": "user", "content": context}
     ])
 
-    return {
-        "research": research
-    }
+    return {"research": research}

@@ -9,7 +9,7 @@ import {
 
 const tech = [
   { icon: Brain, name: "LLMs", desc: "Groq + Llama 3.3" },
-  { icon: Database, name: "Qdrant", desc: "Vector Database" },
+  { icon: Database, name: "FAISS", desc: "Vector Database" },
   { icon: Network, name: "LangGraph", desc: "Agent Workflow" },
   { icon: FileSearch, name: "Advanced RAG", desc: "Hybrid Retrieval" },
   { icon: ShieldCheck, name: "Citation AI", desc: "Evidence Verification" },

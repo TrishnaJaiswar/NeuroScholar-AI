@@ -12,26 +12,39 @@ from ingestion.bm25 import bm25_index
 
 
 def build_hybrid_pipeline():
+    """
+    Builds a fresh Hybrid RAG pipeline using ALL uploaded PDFs.
+    This is called on every query so newly uploaded papers are indexed.
+    """
 
-    # ---------- Ingestion ----------
+    # ---------- Load every uploaded PDF ----------
     docs = load_documents()
+
+    # ---------- Chunk ----------
     chunks = splitter(docs)
 
-    # ---------- Indexes ----------
+    print("\n========== HYBRID RAG ==========")
+    print(f"Indexed PDFs : {len(docs)}")
+    print(f"Total Chunks : {len(chunks)}")
+
+    # ---------- Vector Store ----------
     faiss = vector_store(chunks)
+
+    # ---------- BM25 ----------
     bm25 = bm25_index(chunks)
 
-    # ---------- Retrievers ----------
+    # ---------- Dense Retriever ----------
     vector_retriever = faiss.as_retriever(
-        search_kwargs={"k": 8}
+        search_kwargs={"k": 4}
     )
 
+    # ---------- Hybrid Retrieval ----------
     ensemble = EnsembleRetriever(
         retrievers=[bm25, vector_retriever],
         weights=[0.4, 0.6]
     )
 
-    # ---------- Reranker ----------
+    # ---------- Cross Encoder Reranker ----------
     reranker = CrossEncoderReranker(
         model=HuggingFaceCrossEncoder(
             model_name="BAAI/bge-reranker-base"
@@ -39,6 +52,7 @@ def build_hybrid_pipeline():
         top_n=4
     )
 
+    # ---------- Context Compression ----------
     compression = ContextualCompressionRetriever(
         base_retriever=ensemble,
         base_compressor=reranker
@@ -50,8 +64,7 @@ def build_hybrid_pipeline():
         llm=llm
     )
 
+    print("Hybrid RAG Ready")
+    print("===============================\n")
+
     return retriever
-
-
-# Create once
-hybrid_retriever = build_hybrid_pipeline()

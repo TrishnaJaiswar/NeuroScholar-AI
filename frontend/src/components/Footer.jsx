@@ -27,6 +27,15 @@ export default function Footer() {
               >
                 GitHub Profile
               </a>
+              <br></br>
+              <a
+                href="https://www.linkedin.com/in/trishna-jaiswar-404409257E"
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-600 text-sm hover:underline"
+              >
+                Linkedin Profile
+              </a>
             </div>
           </div>
 
