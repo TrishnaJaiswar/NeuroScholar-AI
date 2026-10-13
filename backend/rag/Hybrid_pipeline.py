@@ -1,8 +1,5 @@
 from langchain_classic.retrievers import EnsembleRetriever
-from langchain_classic.retrievers import ContextualCompressionRetriever
 from langchain_classic.retrievers.multi_query import MultiQueryRetriever
-from langchain_classic.retrievers.document_compressors import CrossEncoderReranker
-from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 
 from core.llm import llm
 from ingestion.loaders import load_documents
@@ -13,58 +10,60 @@ from ingestion.bm25 import bm25_index
 
 def build_hybrid_pipeline():
     """
-    Builds a fresh Hybrid RAG pipeline using ALL uploaded PDFs.
-    This is called on every query so newly uploaded papers are indexed.
+    Builds the Hybrid RAG pipeline using uploaded PDFs.
+
+    Components:
+    - FAISS dense retrieval
+    - BM25 keyword retrieval
+    - Ensemble retrieval
+    - Multi-query retrieval
+
+    Cross-encoder reranking is disabled to reduce memory usage.
     """
 
-    # ---------- Load every uploaded PDF ----------
+    # Load uploaded PDFs
     docs = load_documents()
 
-    # ---------- Chunk ----------
+    if not docs:
+        raise ValueError(
+            "No PDFs found. Upload at least one research paper."
+        )
+
+    # Split documents into chunks
     chunks = splitter(docs)
 
     print("\n========== HYBRID RAG ==========")
-    print(f"Indexed PDFs : {len(docs)}")
-    print(f"Total Chunks : {len(chunks)}")
+    print(f"Indexed PDFs: {len(docs)}")
+    print(f"Total chunks: {len(chunks)}")
 
-    # ---------- Vector Store ----------
+    if not chunks:
+        raise ValueError("No document chunks were generated.")
+
+    # Build FAISS vector store
     faiss = vector_store(chunks)
 
-    # ---------- BM25 ----------
+    # Build BM25 keyword index
     bm25 = bm25_index(chunks)
 
-    # ---------- Dense Retriever ----------
+    # Dense retrieval
     vector_retriever = faiss.as_retriever(
         search_kwargs={"k": 4}
     )
 
-    # ---------- Hybrid Retrieval ----------
+    # Hybrid retrieval
     ensemble = EnsembleRetriever(
         retrievers=[bm25, vector_retriever],
-        weights=[0.4, 0.6]
+        weights=[0.4, 0.6],
     )
 
-    # ---------- Cross Encoder Reranker ----------
-    reranker = CrossEncoderReranker(
-        model=HuggingFaceCrossEncoder(
-            model_name="BAAI/bge-reranker-base"
-        ),
-        top_n=4
-    )
-
-    # ---------- Context Compression ----------
-    compression = ContextualCompressionRetriever(
-        base_retriever=ensemble,
-        base_compressor=reranker
-    )
-
-    # ---------- Multi Query ----------
+    # Multi-query retrieval without cross-encoder reranking
     retriever = MultiQueryRetriever.from_llm(
-        retriever=compression,
-        llm=llm
+        retriever=ensemble,
+        llm=llm,
     )
 
     print("Hybrid RAG Ready")
+    print("Reranker: Disabled to reduce memory usage")
     print("===============================\n")
 
     return retriever
